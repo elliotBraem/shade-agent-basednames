@@ -21,7 +21,6 @@
         "@noble/hashes": "^1.8.0",
         "@phala/dcap-qvl-web": "^0.1.0-beta.2",
         "@phala/dstack-sdk": "^0.1.7",
-        "agent-twitter-client": "^0.0.17",
         "borsh": "^2.0.0",
         "bs58check": "^4.0.0",
         "dotenv": "^16.4.7",
