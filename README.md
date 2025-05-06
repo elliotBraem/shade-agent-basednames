@@ -547,3 +547,7 @@ pub fn protected_by_codehashes_b(&mut self) {
 	// amazing worker agent code
 }
 ```
+
+
+
+near account add-key efizzybot.near grant-function-call-access --allowance '0 NEAR' --contract-account-id crosspost.near --function-names '' autogenerate-new-keypair print-to-terminal network-config mainnet sign-with-keychain send

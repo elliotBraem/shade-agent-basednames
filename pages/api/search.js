@@ -354,7 +354,7 @@ export default async function search(req, res) {
         const sinceDate = new Date((lastTweetTimestamp + 1) * 1000);
         sinceDateFilter = ` since:${sinceDate.toISOString().split('T')[0]}`;
     }
-    const primaryMasaQuery = `@basednames ".base.eth"${sinceDateFilter} -filter:retweets`;
+    const primaryMasaQuery = `@efizzybot`;
     console.log('Primary Masa search query:', primaryMasaQuery);
 
     const searchResults = await searchTweetsWithMasa(primaryMasaQuery, 100);
@@ -415,6 +415,10 @@ export default async function search(req, res) {
         adaptedTweet.basename = adaptedTweet.text.match(/[a-zA-Z0-9]{3,}\.base\.eth/gim)?.[0];
         if (!adaptedTweet.basename) {
             console.log(`Tweet ${adaptedTweet.id} does not contain a valid basename pattern, skipping.`);
+            await crosspostReply(
+                `i'm good`,
+                { id: adaptedTweet.id, author_id: adaptedTweet.author_id },
+            );
             // Potentially update conversation state if it's a known convo but this tweet is not useful
             if(conversationState) {
                 conversationState.lastProcessedTweetId = adaptedTweet.id;
