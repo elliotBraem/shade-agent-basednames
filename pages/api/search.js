@@ -354,7 +354,7 @@ export default async function search(req, res) {
         const sinceDate = new Date((lastTweetTimestamp + 1) * 1000);
         sinceDateFilter = ` since:${sinceDate.toISOString().split('T')[0]}`;
     }
-    const primaryMasaQuery = `@efizzybot`;
+    const primaryMasaQuery = `@basednames`; // MODIFY THIS QUERY, EXACTLY WHAT YOU WOULD ENTER INTO TWITTER ADVANCED SEARCH
     console.log('Primary Masa search query:', primaryMasaQuery);
 
     const searchResults = await searchTweetsWithMasa(primaryMasaQuery, 100);

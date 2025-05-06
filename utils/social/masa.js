@@ -1,4 +1,4 @@
-import { sleep } from "./utils";
+import { sleep } from "../utils";
 
 const MASA_BASE_URL = "https://data.dev.masalabs.ai/api/v1";
 const MASA_API_KEY = process.env.MASA_API_KEY;

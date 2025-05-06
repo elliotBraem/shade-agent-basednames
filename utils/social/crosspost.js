@@ -7,19 +7,6 @@ import { generateNonce, uint8ArrayToBase64 } from "near-sign-verify";
 
 let client = null;
 
-/**
- * @typedef {object} TweetObject
- * @property {string} id - The ID of the tweet.
- * @property {string} author_id - The author ID of the tweet.
- */
-
-/**
- * Sends a reply to a tweet using the crossposting service.
- * @param {string} text - The text content of the reply.
- * @param {TweetObject} tweetToReplyTo - An object containing the id and author_id of the tweet to reply to.
- * @param {boolean} [fakeReply=false] - If true, simulates the reply without actually sending.
- * @returns {Promise<object>} - The response from the crossposting service.
- */
 export const crosspostReply = async (
   text,
   tweetToReplyTo,
@@ -43,6 +30,8 @@ export const crosspostReply = async (
     );
   }
 
+  // START : DO NOT CHANGE THIS
+  // This is used to sign the authentication signature needed for the crosspost API
   const message = "Post";
   const nonce = generateNonce();
   const recipient = "crosspost.near";
@@ -99,6 +88,8 @@ export const crosspostReply = async (
     throw new Error("Error creating crossposting auth token.");
   }
 
+  // END : DO NOT CHANGE THIS
+
   try {
     if (!client) {
       client = new CrosspostClient();
@@ -118,7 +109,8 @@ export const crosspostReply = async (
       content: [
         {
           text: text,
-          // media: [] // Optional: include if sending media
+          // media: [] // Optional: include if sending media, see here:
+          // https://github.com/open-crosspost/open-crosspost-proxy-service/blob/main/packages/types/src/post.ts
         },
       ],
     };
