@@ -1,6 +1,4 @@
-# syntax=docker.io/docker/dockerfile:1
-
-FROM node:23-alpine3.20 AS base
+FROM node:18-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -8,68 +6,61 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Copy package.json files for all components
+COPY package.json .yarnrc.yml yarn.lock ./
+COPY api/package.json ./api/
+COPY frontend/package.json ./frontend/
+COPY packages/sdk/package.json ./packages/sdk/
+COPY packages/types/package.json ./packages/types/
 
+# Install dependencies using yarn workspaces
+RUN corepack enable
+RUN yarn install
 
-# Rebuild the source code only when needed
+# Build the SDK and frontend
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/.yarn ./.yarn
+COPY --from=deps /app/.yarnrc.yml ./
+COPY --from=deps /app/yarn.lock ./
+
+# Copy source code
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED=1
+# Build everything using the scripts from package.json
+# This ensures correct build order: types -> sdk -> api & frontend
+RUN corepack enable
+RUN yarn build
 
-RUN \
-  if [ -f yarn.lock ]; then yarn run build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
-
-# Production image, copy all the files and run next
+# Production image, copy all the files and run the server
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED=1
+
+# Enable corepack for yarn version management
+RUN corepack enable
 
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 appuser
 
-COPY --from=builder /app/public ./public
+# Copy the entire app directory structure to maintain workspace relationships
+COPY --from=builder /app .
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
+USER appuser
 
 EXPOSE 3000
 
 ENV PORT=3000
-
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
 ENV HOSTNAME="0.0.0.0"
-CMD ["node", "server.js"]
+
+# Start the server
+CMD ["yarn", "start"]
 
 FROM runner AS prod
 
-# build with dev vars only (use tappd sim)
+# Development image with tappd simulator endpoint
 FROM runner AS dev
 # ENV DSTACK_SIMULATOR_ENDPOINT="http://host.docker.internal:8090"
 ENV DSTACK_SIMULATOR_ENDPOINT="http://172.17.0.1:8090"
-
-
