@@ -1,8 +1,5 @@
 import { SchedulerJobConfig } from "../types/index.js";
 
-/**
- * Service for interacting with the PingPay Scheduler Service
- */
 export class SchedulerService {
   private schedulerApiUrl: string;
 

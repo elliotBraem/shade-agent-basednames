@@ -1,5 +1,5 @@
 {
-  "name": "@pingpay/subscription-worker",
+  "name": "shade-agent-ui",
   "private": true,
   "version": "0.1.0",
   "type": "module",

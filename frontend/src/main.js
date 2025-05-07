@@ -1,8 +1,4 @@
-import SubscriptionSDK from "@pingpay/subscription-sdk/dist/browser";
-
-// Initialize the SDK with the current origin as the API URL
 const apiUrl = window.location.origin;
-const sdk = new SubscriptionSDK({ apiUrl });
 
 // DOM Elements
 const accountIdElement = document.getElementById("accountId");

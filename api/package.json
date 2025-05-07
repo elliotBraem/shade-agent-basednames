@@ -1,10 +1,10 @@
 {
-  "name": "@pingpay/subscription-api",
+  "name": "shade-agent-api",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "yarn --watch src/server.ts",
+    "dev": "yarn src/server.ts",
     "build": "tsc",
     "start": "NODE_ENV=production yarn node dist/server.js"
   },
