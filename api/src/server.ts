@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { setContractId, setKey } from "@neardefi/shade-agent-js";
+// import { setContractId, setKey } from "@neardefi/shade-agent-js";
 import * as dotenv from "dotenv";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -13,18 +13,17 @@ dotenv.config();
 config.init();
 
 // Initialize SDK
-if (config.contractId) {
-  setContractId(config.contractId);
-}
-if (config.signerId && config.secretKey) {
-  setKey(config.signerId, config.secretKey);
-}
+// if (config.contractId) {
+//   setContractId(config.contractId);
+// }
+// if (config.signerId && config.secretKey) {
+//   setKey(config.signerId, config.secretKey);
+// }
 
 // Import routes
 import agentRoutes from "./routes/agent.js";
 import adminRoutes from "./routes/admin.js";
 import balanceRoutes from "./routes/balance.js";
-import schedulerRoutes from "./routes/scheduler.js";
 import searchRoutes from "./routes/search.js";
 import staticRoutes from "./routes/static.js";
 import workerRoutes from "./routes/worker.js";
@@ -42,7 +41,6 @@ const randomArray = new Uint8Array(32);
 crypto.getRandomValues(randomArray);
 
 // Mount routes
-app.route("/api/scheduler", schedulerRoutes);
 app.route("/api/agent", agentRoutes);
 app.route("/api/worker", workerRoutes);
 app.route("/api/balance", balanceRoutes);
