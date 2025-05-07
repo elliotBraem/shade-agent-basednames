@@ -1,0 +1,22 @@
+# Cline's Learning Journal for shade-agent-basednames
+
+## Communication & Context:
+- User prefers direct conversation and README.md for context over extensive Memory Bank.
+- Only create/load minimal `projectbrief.md` and `techContext.md` if absolutely necessary for Cline's internal context reset.
+- Focus on dense, clear, senior-developer-style documentation and explanations. Diagrams are appreciated.
+- When Memory Bank is not initialized or context is missing, refer to README.md first.
+
+## Technical Preferences & Patterns:
+- **Service Structure:** Prefer domain-specific services, e.g., `api/src/services/social/twitterService.ts` or `api/src/services/evm/nameService.ts`.
+- **In-Memory Data (for background tasks):** Persistence is not a primary concern for queues/active state if the agent runs continuously. In-memory JS objects/Maps are acceptable.
+- **Background Task Invocation:** Design processing loops (e.g., for replies, deposits, refunds) as idempotent service methods callable via API endpoints. An external scheduler will trigger these.
+- **Search Endpoint Design:**
+    - Main social search endpoint (e.g., `GET /api/social/search`) should be parameterized (e.g., `platform`, `query`, `limit`).
+    - The service for this endpoint should manage the full lifecycle of the external search API (e.g., Masa), including querying, polling for completion, and caching results within that single invocation if feasible, or provide status for polling.
+- **Generalization:** Prioritize making patterns (e.g., social media queries, name patterns like `.base.eth`) configurable via environment variables.
+- **NEAR Chain Signatures & Address Generation:**
+    - `deriveWorkerAccount` from `@neardefi/shade-agent-js` is used for the TEE worker's primary ephemeral NEAR account.
+    - `generateAddress` from `@neardefi/shade-agent-js` (with a `path` parameter, e.g., `author_id-basename`) is crucial for deriving deterministic, unique EVM-compatible deposit addresses via NEAR MPC for specific user operations.
+- **TEE Worker Core Logic:** The agent runs in a TEE, derives an ephemeral NEAR key for gas, and registers its codehash with a NEAR smart contract for verification and controlled method access.
+- **Error Handling:** Implement robust `try/catch` blocks for external calls and critical logic, returning appropriate Hono HTTP errors.
+- **Configuration:** All configurations (API keys, contract IDs, feature flags, patterns) must be driven by environment variables.

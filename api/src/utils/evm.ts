@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { networkId, contractCall } from '@neardefi/shade-agent-js';
+import { sleep } from './common.js';
 
 // Base Sepolia contract addresses from README
 const REGISTRAR_CONTROLLER_ADDRESS = {
@@ -46,8 +47,6 @@ const getProvider = () => {
     );
 };
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
 export const evm = {
     name: 'Base',
     chainId: networkId === 'testnet' ? 84532 : 8453,
@@ -59,14 +58,14 @@ export const evm = {
 
     // custom methods for basednames registration
 
-    checkBasename: async (basename) => {
+    checkBasename: async (basename: string) => {
         try {
             const provider = getProvider();
 
             console.log(`Checking basename: "${basename}"...`);
 
             const registrarController = new ethers.Contract(
-                REGISTRAR_CONTROLLER_ADDRESS[networkId],
+                REGISTRAR_CONTROLLER_ADDRESS[networkId as 'testnet' | 'mainnet'],
                 [
                     ...REGISTRAR_CONTROLLER_ABI,
                     'function valid(string memory name) external view returns (bool)',
@@ -128,14 +127,26 @@ export const evm = {
             console.error(`Error checking basename "${basename}":`, error);
             return {
                 basename,
-                error: error.message,
+                error: (error as Error).message,
             };
         }
     },
 
-    getBasenameTx: async (path, basename, senderAddress, targetAddress) => {
+    getBasenameTx: async (path: string, basename: string, senderAddress: string, targetAddress: string) => {
         try {
-            // The basename has already been checked in nameService.ts before calling this method
+            // Check basename first and handle any validation errors
+            const nameCheck = await evm.checkBasename(basename);
+            if (!nameCheck.isValid || !nameCheck.isAvailable) {
+                console.error(
+                    `Cannot proceed with registration for "${basename}"`,
+                );
+                return {
+                    success: false,
+                    reason: !nameCheck.isValid
+                        ? 'Invalid name format'
+                        : 'Name not available',
+                };
+            }
 
             // Create contract interfaces
             const registrarControllerInterface = new ethers.Interface([
@@ -151,7 +162,7 @@ export const evm = {
             const provider = getProvider();
             // Get the price for registration
             const registerPrice = await provider.call({
-                to: REGISTRAR_CONTROLLER_ADDRESS[networkId],
+                to: REGISTRAR_CONTROLLER_ADDRESS[networkId as 'testnet' | 'mainnet'],
                 data: registrarControllerInterface.encodeFunctionData(
                     'registerPrice',
                     [basename, registrationDuration],
@@ -197,7 +208,7 @@ export const evm = {
                 name: basename,
                 owner: ethers.getAddress(targetAddress),
                 duration: registrationDuration,
-                resolver: L2_RESOLVER_ADDRESS[networkId] || ethers.ZeroAddress,
+                resolver: L2_RESOLVER_ADDRESS[networkId as 'testnet' | 'mainnet'] || ethers.ZeroAddress,
                 data: dataStruct,
                 reverseRecord: true,
             };
@@ -211,7 +222,7 @@ export const evm = {
             // STEP 1: Register the basename
             // Create transaction object for registering the basename
             const baseTx = {
-                to: REGISTRAR_CONTROLLER_ADDRESS[networkId],
+                to: REGISTRAR_CONTROLLER_ADDRESS[networkId as 'testnet' | 'mainnet'],
                 data,
                 nonce,
                 chainId: evm.chainId, // Base Sepolia chain ID
@@ -227,14 +238,16 @@ export const evm = {
             console.error('Error in basename registration handler:', error);
             return {
                 success: false,
-                error: error.message,
+                error: error,
             };
         }
     },
 
     getGasPrice: async () => getProvider().getFeeData(),
-    getBalance: ({ address }) => getProvider().getBalance(address),
-    formatBalance: (balance) => ethers.formatEther(balance),
+    
+    getBalance: async ({ address }: { address: string }) => getProvider().getBalance(address),
+    
+    formatBalance: (balance: bigint) => ethers.formatEther(balance),
 
     send: async ({
         path,
@@ -242,6 +255,12 @@ export const evm = {
         to = '0x525521d79134822a342d330bd91DA67976569aF1',
         amount = '0.000001',
         gasLimit = 21000n,
+    }: {
+        path: string;
+        from: string;
+        to?: string;
+        amount?: string;
+        gasLimit?: bigint;
     }) => {
         if (!address) return console.log('must provide a sending address');
 
@@ -283,7 +302,7 @@ export const evm = {
 
     // completes evm transaction calling NEAR smart contract get_signature method of shade agent
     // only a registered shade agent should be able to call this to generate signatures for the OTA deposit accounts we replied to users with
-    completeEthereumTx: async ({ baseTx, path }) => {
+    completeEthereumTx: async ({ baseTx, path }: { baseTx: any; path: string }) => {
         const { chainId } = evm;
 
         console.log('networkId', networkId);
@@ -329,7 +348,7 @@ export const evm = {
     },
 
     // broadcast transaction to evm chain, return object with explorerLink
-    broadcastTransaction: async (serializedTx, second = false) => {
+    broadcastTransaction: async (serializedTx: string, second = false) => {
         console.log('BROADCAST serializedTx', serializedTx);
 
         try {

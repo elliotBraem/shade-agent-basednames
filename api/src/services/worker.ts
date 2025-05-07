@@ -1,4 +1,3 @@
-import { WorkerStatus } from "@pingpay/types";
 import {
   deriveWorkerAccount,
   registerWorker,
@@ -67,14 +66,14 @@ export class WorkerService {
         });
         return true;
       } catch (e) {
-        return false;
+        console.error("contractCall to is_verified_by_codehash failed:", e);
+        return false; // contract call failure means not verified
       }
     } catch (error) {
-      console.error("Error checking verification status:", error);
-      throw new Error("Failed to verify worker");
+      console.error("Error in worker verification process:", error);
+      throw new Error(`Worker verification failed: ${(error as Error).message}`);
     }
   }
 }
 
-// Export singleton instance
 export const workerService = new WorkerService();

@@ -22,10 +22,13 @@ if (config.signerId && config.secretKey) {
 
 // Import routes
 import agentRoutes from "./routes/agent.js";
+import adminRoutes from "./routes/admin.js";
 import balanceRoutes from "./routes/balance.js";
 import schedulerRoutes from "./routes/scheduler.js";
+import searchRoutes from "./routes/search.js";
 import staticRoutes from "./routes/static.js";
 import workerRoutes from "./routes/worker.js";
+import evmRoutes from "./routes/evm.js";
 
 // Create Hono app
 const app = new Hono();
@@ -43,6 +46,9 @@ app.route("/api/scheduler", schedulerRoutes);
 app.route("/api/agent", agentRoutes);
 app.route("/api/worker", workerRoutes);
 app.route("/api/balance", balanceRoutes);
+app.route("/api/evm", evmRoutes);
+app.route("/api/search", searchRoutes);
+app.route("/api/admin", adminRoutes);
 app.route("/", staticRoutes);
 
 // Start the server
